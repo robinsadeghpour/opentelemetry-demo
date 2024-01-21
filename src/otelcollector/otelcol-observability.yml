@@ -12,10 +12,14 @@ exporters:
     resource_to_telemetry_conversion:
       enabled: true
     enable_open_metrics: true
+  elasticsearch/trace:
+    endpoints: ["https://9bd31796482747bcba86bde2e17d1406.us-central1.gcp.cloud.es.io"]
+    traces_index: trace_index
+    api_key: ZGFoTEJJMEJMa3F1bjZzVnFoVGE6blJJMkY1bS1UTWF2Yk8xU3N6S01tUQ==
 
 service:
   pipelines:
     traces:
-      exporters: [otlp, logging, spanmetrics]
+      exporters: [otlp, logging, spanmetrics, elasticsearch/trace]
     metrics:
       exporters: [prometheus, logging]

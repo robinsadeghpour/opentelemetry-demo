@@ -13,6 +13,9 @@ networks:
     name: opentelemetry-demo
     driver: bridge
 
+volumes:
+  esdata:
+
 services:
   # ******************
   # Core Demo Services
@@ -603,13 +606,22 @@ services:
   # ********************
   # Telemetry Components
   # ********************
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    environment:
+      - "discovery.type=single-node"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    logging: *logging
+    
   # Jaeger
   jaeger:
     image: jaegertracing/all-in-one
     container_name: jaeger
     command:
-      - "--memory.max-traces"
-      - "10000"
       - "--query.base-path"
       - "/jaeger/ui"
       - "--prometheus.server-url"
@@ -625,6 +637,10 @@ services:
     environment:
       - COLLECTOR_OTLP_ENABLED=true
       - METRICS_STORAGE_TYPE=prometheus
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
     logging: *logging
 
   # Grafana
@@ -661,8 +677,11 @@ services:
       - "4318:4318"     # OTLP over HTTP receiver
       - "9464"          # Prometheus exporter
       - "8888"          # metrics endpoint
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - jaeger
+      - elasticsearch
     logging: *logging
 
   # Prometheus
